@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{Short Title}}</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #fcfcfb; --card: #ffffff; --line: #e6e5e0; --grid: #efeee9;
+  --ink: #0b0b0b; --ink2: #52514e; --ink3: #8a8983;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --muted: #c9c8c2;
+  --good: #1baf7a; --bad: #e34948;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #141413; --card: #1a1a19; --line: #2e2e2b; --grid: #262624;
+    --ink: #ffffff; --ink2: #c3c2b7; --ink3: #8f8e86;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --muted: #4a4a46;
+    --good: #199e70; --bad: #e66767;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #141413; --card: #1a1a19; --line: #2e2e2b; --grid: #262624;
+  --ink: #ffffff; --ink2: #c3c2b7; --ink3: #8f8e86;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --muted: #4a4a46;
+  --good: #199e70; --bad: #e66767;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+  font: 20px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1040px; margin: 0 auto; padding: 72px 24px 120px; }
+section { margin-top: 112px; }
+h1 { font-size: 52px; line-height: 1.1; margin: 0 0 20px; letter-spacing: -0.02em; }
+h2 { font-size: 36px; line-height: 1.2; margin: 0 0 12px; letter-spacing: -0.01em; }
+.kicker { font-size: 16px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--s1); margin-bottom: 12px; }
+.lead { font-size: 24px; color: var(--ink2); margin: 0 0 36px; max-width: 760px; }
+p.note { color: var(--ink2); margin: 20px 0 0; max-width: 780px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 32px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 20px; }
+.tile { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 28px; }
+.tile .v { font-size: 48px; font-weight: 700; line-height: 1.05; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.tile .l { color: var(--ink2); margin-top: 10px; font-size: 18px; }
+.hero { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; margin: 44px 0; }
+.hero .big { font-size: 96px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+.hero .from { color: var(--ink3); }
+.hero .arrow { font-size: 56px; color: var(--ink3); }
+.hero .to { color: var(--s1); }
+.hero .cap { color: var(--ink2); font-size: 20px; max-width: 280px; }
+.controls { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 4px; background: var(--card); }
+.seg button { font: inherit; font-size: 17px; border: 0; background: transparent; color: var(--ink2); padding: 8px 18px; border-radius: 999px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.seg button:focus-visible { outline: 2px solid var(--s1); outline-offset: 2px; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { fill: var(--ink2); font-size: 16px; font-family: inherit; }
+svg .lbl { fill: var(--ink); font-size: 17px; }
+svg .val { fill: var(--ink); font-size: 16px; font-variant-numeric: tabular-nums; }
+svg .ax { stroke: var(--line); }
+svg .gr { stroke: var(--grid); }
+.hit { fill: transparent; cursor: default; }
+#tip { position: fixed; pointer-events: none; background: var(--card); color: var(--ink); border: 1px solid var(--line);
+  border-radius: 12px; padding: 12px 16px; font-size: 16px; line-height: 1.45; box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  opacity: 0; transition: opacity .12s; max-width: 320px; z-index: 10; }
+#tip b { font-size: 17px; }
+.legend { display: flex; gap: 24px; flex-wrap: wrap; margin: 0 0 16px; color: var(--ink2); font-size: 17px; }
+.legend span::before { content: ""; display: inline-block; width: 14px; height: 14px; border-radius: 4px; margin-right: 8px; vertical-align: -1px; background: var(--c); }
+.pipe { display: flex; align-items: stretch; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+.step { flex: 1 1 150px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; }
+.step b { display: block; font-size: 20px; margin-bottom: 6px; }
+.step span { color: var(--ink2); font-size: 17px; }
+.pipe .arr { align-self: center; color: var(--ink3); font-size: 28px; }
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+.rule { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 28px; }
+.rule .t { font-size: 22px; font-weight: 650; margin-bottom: 8px; }
+.rule .d { color: var(--ink2); font-size: 18px; }
+.tag { display: inline-block; font-size: 15px; font-weight: 600; padding: 3px 12px; border-radius: 999px; margin-bottom: 14px; }
+.tag.yes { background: color-mix(in srgb, var(--good) 16%, transparent); color: var(--good); }
+.tag.mid { background: color-mix(in srgb, var(--s1) 14%, transparent); color: var(--s1); }
+.rule .s { display: flex; gap: 28px; margin: 6px 0 14px; font-variant-numeric: tabular-nums; }
+.rule .s b { display: block; font-size: 30px; font-weight: 700; line-height: 1.1; }
+.rule .s span { font-size: 15px; color: var(--ink3); }
+.meter { height: 8px; border-radius: 4px; background: var(--line); margin-bottom: 14px; overflow: hidden; }
+.meter i { display: block; height: 100%; border-radius: 4px; background: var(--muted); }
+.tile.hl { border-color: var(--s1); }
+.viz { position: relative; border-radius: 14px; overflow: hidden; background: var(--line); }
+.viz img { display: block; width: 100%; height: auto; }
+.viz svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.viz rect.b { fill: transparent; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.viz rect.b:hover { fill: color-mix(in srgb, currentColor 25%, transparent); stroke-width: 3; }
+.thumbs { display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 12px; margin-bottom: 16px; }
+.thumbs button { flex: 0 0 auto; padding: 0; border: 3px solid transparent; border-radius: 10px; background: none; cursor: pointer; overflow: hidden; line-height: 0; }
+.thumbs button[aria-pressed="true"] { border-color: var(--s1); }
+.thumbs img { height: 72px; width: auto; display: block; }
+.vstats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-top: 20px; }
+.vstats div { font-size: 16px; color: var(--ink2); }
+.vstats b { display: block; font-size: 36px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.tag.no { background: color-mix(in srgb, var(--bad) 14%, transparent); color: var(--bad); }
+.theme { position: fixed; top: 16px; right: 16px; font: inherit; font-size: 15px; border: 1px solid var(--line); background: var(--card); color: var(--ink2); border-radius: 999px; padding: 8px 14px; cursor: pointer; z-index: 5; }
+footer { margin-top: 112px; color: var(--ink3); font-size: 17px; border-top: 1px solid var(--line); padding-top: 28px; }
+@media (max-width: 640px) {
+  body { font-size: 18px; } main { padding: 56px 16px 80px; }
+  h1 { font-size: 38px; } h2 { font-size: 28px; } .lead { font-size: 20px; }
+  .hero .big { font-size: 64px; } section { margin-top: 80px; } .card { padding: 20px; }
+}
+</style>
+
+</head>
+<body>
+<button class="theme" id="theme" aria-label="Toggle theme">◐ Theme</button>
+<div id="tip" role="tooltip"></div>
+<main>
+
+<div class="kicker">Experiment report</div>
+<h1>{{Title: what the experiment achieved}}</h1>
+<p class="lead">{{One or two sentences: the problem and what was tried.}}</p>
+
+<!-- HERO: baseline to best, one metric -->
+<div class="hero">
+  <div class="big from">0.531</div><div class="arrow">→</div><div class="big to">0.743</div>
+  <div class="cap">{{metric}}, {{baseline}} vs {{best}}. <b>+40%</b></div>
+</div>
+
+<!-- STAT TILES: 3 to 4 numbers, short labels -->
+<div class="tiles">
+  <div class="tile"><div class="v">18</div><div class="l">test items</div></div>
+  <div class="tile"><div class="v">11</div><div class="l">variants compared</div></div>
+  <div class="tile"><div class="v">$2.6</div><div class="l">total spend</div></div>
+</div>
+
+<!-- SECTION: ranked bars with toggles -->
+<section>
+  <div class="kicker">Step 1</div>
+  <h2>{{Which option wins?}}</h2>
+  <p class="lead">{{One-line takeaway.}}</p>
+  <div class="card">
+    <div class="controls">
+      <div class="seg" data-ctl="lbMetric"><button aria-pressed="false" data-v="0">Metric A</button><button aria-pressed="true" data-v="1">Metric B</button></div>
+      <div class="seg" data-ctl="lbGroup"><button aria-pressed="true" data-v="All">All</button><button aria-pressed="false" data-v="G1">G1</button><button aria-pressed="false" data-v="G2">G2</button></div>
+    </div>
+    <svg id="lb" aria-label="Leaderboard"></svg>
+  </div>
+  <p class="note">Hover a bar for details.</p>
+</section>
+
+<!-- SECTION: problem tiles -->
+<section>
+  <div class="kicker">Step 2</div>
+  <h2>{{What is wrong?}}</h2>
+  <p class="lead">{{Diagnosis in one line.}}</p>
+  <div class="tiles">
+    <div class="tile"><div class="v">+5-14%</div><div class="l">{{finding}}</div></div>
+    <div class="tile"><div class="v">46%</div><div class="l">{{finding}}</div></div>
+  </div>
+</section>
+
+<!-- SECTION: repeated runs as dots with mean bar -->
+<section>
+  <div class="kicker">Step 3</div>
+  <h2>{{Variants and run noise}}</h2>
+  <p class="lead">{{Takeaway.}}</p>
+  <div class="card"><svg id="dots" aria-label="Runs per variant"></svg></div>
+  <p class="note">Each dot is one full run. The bar is the mean.</p>
+</section>
+
+<!-- SECTION: line chart with crosshair -->
+<section>
+  <div class="kicker">Step 4</div>
+  <h2>{{Parameter sweep}}</h2>
+  <div class="card">
+    <div class="legend" id="lnLegend"></div>
+    <svg id="line" aria-label="Parameter sweep"></svg>
+  </div>
+</section>
+
+<!-- SECTION: tested and rejected cards with filter -->
+<section>
+  <div class="kicker">Rejected</div>
+  <h2>Tested and rejected</h2>
+  <div class="controls">
+    <div class="seg" data-ctl="rjWhy"><button aria-pressed="true" data-v="all">All</button><button aria-pressed="false" data-v="acc">Less accurate</button><button aria-pressed="false" data-v="cost">Too expensive</button></div>
+  </div>
+  <div class="rules" id="rj"></div>
+</section>
+
+<!-- RESULT: pipeline + waterfall + gain tiles. Always end here. -->
+<section>
+  <div class="kicker">Result</div>
+  <h2>How each component improved {{metric}}</h2>
+  <div class="pipe">
+    <div class="step"><b>Step A</b><span>what it does</span></div><div class="arr">→</div>
+    <div class="step"><b>Step B</b><span>what it does</span></div><div class="arr">→</div>
+    <div class="step"><b>Step C</b><span>what it does</span></div>
+  </div>
+  <div class="card" style="margin-top:28px">
+    <div class="controls">
+      <div class="seg" data-ctl="wfGroup"><button aria-pressed="true" data-v="0">All</button><button aria-pressed="false" data-v="1">G1</button><button aria-pressed="false" data-v="2">G2</button></div>
+    </div>
+    <svg id="wf" aria-label="Waterfall of gains"></svg>
+  </div>
+  <div class="tiles" style="margin-top:28px" id="gains"></div>
+</section>
+
+<footer>{{Caveats in one or two lines: sample size, tuning on test data, what was not tested.}}</footer>
+</main>
+
+<script>
+// ============ DATA: replace everything in this block ============
+const DATA = {
+  // name, per-metric value per group {All, G1, G2} as [metricA, metricB], right-column note, highlight
+  lb: [
+    ["Winner", { G1: [0.83, 0.57], G2: [0.78, 0.43] }, "$0.084", true],
+    ["Runner-up", { G1: [0.86, 0.58], G2: [0.56, 0.33] }, "$0.097"],
+    ["Third", { G1: [0.82, 0.58], G2: [0.65, 0.41] }, "$0.093"],
+  ],
+  // variant, color token, runs, note
+  dots: [
+    ["Variant A", "var(--s1)", [0.685, 0.658, 0.699, 0.666], "4 runs"],
+    ["Variant B", "var(--s2)", [0.718, 0.653], "2 runs"],
+    ["Variant C", "var(--s3)", [0.637, 0.653], "2 runs"],
+  ],
+  // x values, series [name, color, y values], index of the marked default
+  line: { x: [896, 1008, 1036, 1120, 1344, 2016], mark: 2,
+    series: [["Merged", "var(--s1)", [0.685, 0.693, 0.733, 0.693, 0.678, 0.667]],
+             ["Run A", "var(--s2)", [0.648, 0.656, 0.699, 0.659, 0.646, 0.636]]] },
+  // name, score (or null), cost (or null), filter key, verdict tag, one line why
+  rejected: [
+    ["Option X", 0.499, 0.097, "acc", "Close runner-up", "Loses on G2."],
+    ["Option Y", 0.423, 0.731, "cost", "9× the cost", "Most expensive, less accurate."],
+    ["Option Z", null, null, "cost", "Not run", "Too expensive to try."],
+  ],
+  rejectedRef: 0.531,  // bar length is relative to this score
+  // waterfall: step names, then cumulative values per group [All, G1, G2]
+  wf: { steps: ["Baseline", "+ Step A", "+ Step B", "+ Step C"],
+        vals: [[0.531, 0.659, 0.685, 0.733], [0.572, 0.687, 0.730, 0.774], [0.434, 0.606, 0.622, 0.641]] },
+  gains: ["Step A. Biggest win.", "Step B.", "Step C. 2× cost."],  // one label per gain step
+};
+// ================================================================
+
+const $ = s => document.querySelector(s);
+const NS = "http://www.w3.org/2000/svg";
+const tip = $("#tip");
+function el(tag, attrs, parent, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function showTip(ev, html) { tip.innerHTML = html; tip.style.opacity = 1; moveTip(ev); }
+function moveTip(ev) {
+  const x = Math.min(ev.clientX + 16, innerWidth - tip.offsetWidth - 12);
+  const y = Math.min(ev.clientY + 16, innerHeight - tip.offsetHeight - 12);
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+function hideTip() { tip.style.opacity = 0; }
+function bindTip(node, html) {
+  node.addEventListener("mouseenter", e => showTip(e, html));
+  node.addEventListener("mousemove", moveTip);
+  node.addEventListener("mouseleave", hideTip);
+}
+const f3 = v => v.toFixed(3);
+const state = { lbMetric: 1, lbGroup: "All", rjWhy: "all", wfGroup: 0 };
+document.querySelectorAll(".seg").forEach(seg => {
+  seg.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    seg.querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    const k = seg.dataset.ctl, v = b.dataset.v;
+    state[k] = isNaN(+v) ? v : +v;
+    drawAll();
+  });
+});
+
+// Horizontal bars. rows: {label, value, color, tip, right}. opt: min, max, step, left, right, fmt, tfmt, ref
+function hbar(svg, rows, opt = {}) {
+  svg.innerHTML = "";
+  const W = 960, left = opt.left || 250, right = opt.right || 90, rowH = opt.rowH || 44, top = 8;
+  const H = top + rows.length * rowH + 30;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const max = opt.max || 1, min = opt.min || 0;
+  const x = v => left + (v - min) / (max - min) * (W - left - right);
+  for (let t = min; t <= max + 1e-9; t += opt.step || 0.2) {
+    el("line", { x1: x(t), x2: x(t), y1: top, y2: H - 30, class: "gr" }, svg);
+    el("text", { x: x(t), y: H - 6, "text-anchor": "middle" }, svg, opt.tfmt ? opt.tfmt(t) : t.toFixed(opt.step < 0.1 ? 2 : 1));
+  }
+  rows.forEach((r, i) => {
+    const y = top + i * rowH, bh = rowH - 16;
+    el("text", { x: left - 16, y: y + bh / 2 + 6, "text-anchor": "end", class: "lbl" }, svg, r.label);
+    const w = Math.max(2, x(r.value) - x(min));
+    el("path", { d: `M${x(min)},${y} h${w - 4} a4,4 0 0 1 4,4 v${bh - 8} a4,4 0 0 1 -4,4 h${-(w - 4)} z`, fill: r.color }, svg);
+    el("text", { x: x(r.value) + 10, y: y + bh / 2 + 6, class: "val" }, svg, (opt.fmt || f3)(r.value));
+    if (r.right) el("text", { x: W - 4, y: y + bh / 2 + 6, "text-anchor": "end" }, svg, r.right);
+    bindTip(el("rect", { x: 0, y: y - 6, width: W, height: rowH, class: "hit" }, svg), r.tip);
+  });
+  if (opt.ref != null)
+    el("line", { x1: x(opt.ref), x2: x(opt.ref), y1: top - 4, y2: H - 30, stroke: "var(--ink3)", "stroke-dasharray": "4 4", "stroke-width": 1.5 }, svg);
+}
+
+function drawLB() {
+  const m = state.lbMetric, g = state.lbGroup;
+  const groups = Object.keys(DATA.lb[0][1]);
+  const rows = DATA.lb.map(([n, v, right, hl]) => {
+    const val = g === "All" ? groups.reduce((t, k) => t + v[k][m], 0) / groups.length : v[g][m];
+    return { label: n, value: val, right, color: hl ? "var(--s1)" : "var(--muted)",
+      tip: `<b>${n}</b><br>${f3(val)}<br>` + groups.map(k => `${k} ${f3(v[k][m])}`).join(" · ") + `<br>${right}` };
+  }).sort((a, b) => b.value - a.value);
+  hbar($("#lb"), rows);
+}
+
+// Dot plot: one row per variant, dots are runs, dark bar is the mean
+function drawDots() {
+  const svg = $("#dots"); svg.innerHTML = "";
+  const rows = DATA.dots, all = rows.flatMap(r => r[2]);
+  const mn = Math.floor(Math.min(...all) * 50) / 50 - 0.02, mx = Math.ceil(Math.max(...all) * 50) / 50 + 0.02;
+  const W = 960, L = 260, R = 90, rowH = 76, T = 10, H = T + rows.length * rowH + 34;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const x = v => L + (v - mn) / (mx - mn) * (W - L - R);
+  for (let t = mn; t <= mx + 1e-9; t += 0.02) { el("line", { x1: x(t), x2: x(t), y1: T, y2: H - 34, class: "gr" }, svg); el("text", { x: x(t), y: H - 8, "text-anchor": "middle" }, svg, t.toFixed(2)); }
+  rows.forEach(([n, c, v, note], i) => {
+    const cy = T + i * rowH + rowH / 2, mean = v.reduce((a, b) => a + b) / v.length;
+    el("text", { x: L - 16, y: cy + 6, "text-anchor": "end", class: "lbl" }, svg, n);
+    el("line", { x1: x(Math.min(...v)), x2: x(Math.max(...v)), y1: cy, y2: cy, stroke: c, "stroke-width": 2, opacity: .5 }, svg);
+    el("rect", { x: x(mean) - 2, y: cy - 20, width: 4, height: 40, rx: 2, fill: "var(--ink)" }, svg);
+    v.forEach(p => el("circle", { cx: x(p), cy, r: 9, fill: c, stroke: "var(--card)", "stroke-width": 2 }, svg));
+    bindTip(el("rect", { x: 0, y: cy - rowH / 2, width: W, height: rowH, class: "hit" }, svg),
+      `<b>${n}</b><br>Runs: ${v.map(f3).join(", ")}<br>Mean: ${f3(mean)}<br>${note}`);
+  });
+}
+
+// Line chart with hover crosshair and a dashed marker on the default x
+function drawLine() {
+  const svg = $("#line"); svg.innerHTML = "";
+  const D = DATA.line, ys = D.series.flatMap(s => s[2]);
+  const W = 960, H = 420, L = 70, R = 130, T = 20, B = 50;
+  const x0 = Math.min(...D.x), x1 = Math.max(...D.x), y0 = Math.min(...ys) - 0.01, y1 = Math.max(...ys) + 0.01;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const x = v => L + (v - x0) / (x1 - x0) * (W - L - R), y = v => T + (y1 - v) / (y1 - y0) * (H - T - B);
+  for (let i = 0; i <= 4; i++) { const t = y0 + (y1 - y0) * i / 4; el("line", { x1: L, x2: W - R, y1: y(t), y2: y(t), class: "gr" }, svg); el("text", { x: L - 12, y: y(t) + 5, "text-anchor": "end" }, svg, t.toFixed(2)); }
+  D.x.forEach(t => el("text", { x: x(t), y: H - 18, "text-anchor": "middle" }, svg, t));
+  el("line", { x1: L, x2: W - R, y1: H - B, y2: H - B, class: "ax" }, svg);
+  if (D.mark != null) el("line", { x1: x(D.x[D.mark]), x2: x(D.x[D.mark]), y1: T, y2: H - B, stroke: "var(--ink3)", "stroke-dasharray": "4 4" }, svg);
+  $("#lnLegend").innerHTML = D.series.map(([n, c]) => `<span style="--c:${c}">${n}</span>`).join("");
+  D.series.forEach(([n, c, v]) => {
+    el("path", { d: v.map((p, i) => (i ? "L" : "M") + x(D.x[i]) + "," + y(p)).join(""), fill: "none", stroke: c, "stroke-width": 2.5 }, svg);
+    v.forEach((p, i) => el("circle", { cx: x(D.x[i]), cy: y(p), r: 5, fill: c, stroke: "var(--card)", "stroke-width": 2 }, svg));
+    el("text", { x: W - R + 12, y: y(v[v.length - 1]) + 5, class: "lbl" }, svg, n);
+  });
+  const cross = el("line", { y1: T, y2: H - B, stroke: "var(--ink3)", opacity: 0 }, svg);
+  const hit = el("rect", { x: L, y: T, width: W - L - R, height: H - T - B, class: "hit" }, svg);
+  hit.addEventListener("mousemove", e => {
+    const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) / r.width * W;
+    let i = 0; D.x.forEach((v, j) => { if (Math.abs(x(v) - px) < Math.abs(x(D.x[i]) - px)) i = j; });
+    cross.setAttribute("x1", x(D.x[i])); cross.setAttribute("x2", x(D.x[i])); cross.setAttribute("opacity", 1);
+    showTip(e, `<b>${D.x[i]}</b><br>` + D.series.map(s => `${s[0]}: ${f3(s[2][i])}`).join("<br>"));
+  });
+  hit.addEventListener("mouseleave", () => { cross.setAttribute("opacity", 0); hideTip(); });
+}
+
+// Rejected cards with verdict tag, score, cost and a meter against the winner
+function drawRJ() {
+  const box = $("#rj"); box.innerHTML = "";
+  DATA.rejected.filter(r => state.rjWhy === "all" || r[3] === state.rjWhy).forEach(r => {
+    const d = document.createElement("div"); d.className = "rule";
+    const stats = r[1] == null ? "" : `<div class="s"><div><b>${f3(r[1])}</b><span>score</span></div><div><b>${r[2] ? "$" + r[2].toFixed(3) : "free"}</b><span>cost</span></div></div>
+      <div class="meter"><i style="width:${Math.min(100, Math.round(r[1] / DATA.rejectedRef * 100))}%"></i></div>`;
+    d.innerHTML = `<span class="tag no">${r[4]}</span><div class="t">${r[0]}</div>${stats}<div class="d">${r[5]}</div>`;
+    box.appendChild(d);
+  });
+}
+
+// Waterfall: baseline bar, one floating bar per gain, final total bar
+function drawWF() {
+  const svg = $("#wf"); svg.innerHTML = "";
+  const v = DATA.wf.vals[state.wfGroup], W = 960, H = 440, L = 70, R = 20, T = 40, B = 60;
+  const top = Math.ceil(Math.max(...DATA.wf.vals.flat()) * 10) / 10 + 0.05;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const y = t => T + (top - t) / top * (H - T - B);
+  for (let t = 0; t <= top - 0.04; t += 0.2) { el("line", { x1: L, x2: W - R, y1: y(t), y2: y(t), class: "gr" }, svg); el("text", { x: L - 12, y: y(t) + 5, "text-anchor": "end" }, svg, t.toFixed(1)); }
+  const n = v.length + 1, slot = (W - L - R) / n, bw = slot * 0.56;
+  const bars = v.map((val, i) => ({ lo: i ? v[i - 1] : 0, hi: val, name: DATA.wf.steps[i], c: i ? "var(--s1)" : "var(--muted)" }));
+  bars.push({ lo: 0, hi: v[v.length - 1], name: "Final", c: "var(--ink)" });
+  bars.forEach((b, i) => {
+    const cx = L + slot * i + slot / 2, tp = y(b.hi), h = Math.max(3, y(b.lo) - y(b.hi)), gain = i > 0 && i < bars.length - 1;
+    el("rect", { x: cx - bw / 2, y: tp, width: bw, height: h, rx: 4, fill: b.c }, svg);
+    el("text", { x: cx, y: tp - 12, "text-anchor": "middle", class: "val", "font-weight": 600 }, svg, gain ? "+" + f3(b.hi - b.lo) : f3(b.hi));
+    el("text", { x: cx, y: H - 24, "text-anchor": "middle", class: "lbl" }, svg, b.name);
+    if (i < bars.length - 1) el("line", { x1: cx + bw / 2, x2: cx + slot - bw / 2, y1: tp, y2: tp, stroke: "var(--ink3)", "stroke-dasharray": "3 3" }, svg);
+    bindTip(el("rect", { x: cx - slot / 2, y: T - 30, width: slot, height: H - T - B + 30, class: "hit" }, svg),
+      `<b>${b.name}</b><br>${f3(b.hi)}${gain ? `<br>Gain: +${f3(b.hi - b.lo)}` : ""}`);
+  });
+  const all = DATA.wf.vals[0];
+  $("#gains").innerHTML = DATA.gains.map((l, i) => `<div class="tile"><div class="v" style="color:var(--s1)">+${f3(all[i + 1] - all[i])}</div><div class="l">${l}</div></div>`).join("");
+}
+
+function drawAll() { drawLB(); drawDots(); drawLine(); drawRJ(); drawWF(); }
+drawAll();
+
+$("#theme").addEventListener("click", () => {
+  const root = document.documentElement;
+  const dark = root.dataset.theme ? root.dataset.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme = dark ? "light" : "dark";
+});
+</script>
+</body>
+</html>
