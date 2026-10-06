@@ -8,6 +8,7 @@ A skill is a folder holding a `SKILL.md` and any files it needs. The agent reads
 |---|---|
 | [`experiment-report`](experiment-report) | Turns ML experiment results into one interactive, self-contained HTML report |
 | [`clip`](clip) | Copies text from the agent to your local clipboard over SSH and tmux, using OSC 52 |
+| [`learn`](learn) | Persists corrections, preferences and workflows into rules or skills for future sessions |
 
 ## Install
 
@@ -89,6 +90,24 @@ Copies text from the agent to the clipboard of the device you are typing on, eve
 
 - A terminal that supports OSC 52, such as Termux, iTerm2, WezTerm, kitty, Windows Terminal or Alacritty.
 - Inside tmux, tmux 3.2 or newer with `set-clipboard` set to `external` (the default) or `on`. The text also stays in tmux's paste buffer, so `Ctrl-b ]` pastes it.
+
+## learn
+
+Persists lessons, corrections, user preferences and workflows into rules or skills so the agent remembers them across future sessions.
+
+| Usage | What it learns |
+|---|---|
+| `/learn` | Extracts lessons, constraints and corrections from recent conversation turns |
+| `/learn <topic>` | Focuses on a specific rule, preference or procedure |
+
+**How it works**
+
+1. **Identifies the lesson:** Analyzes recent turns for user corrections, failed attempts resolved later, or explicit constraints.
+2. **Classifies the target:**
+   - **Rule:** Behavioral constraints, coding standards, environment quirks and formatting habits go into `AGENTS.md`, `CLAUDE.md` or `GEMINI.md`.
+   - **Skill:** Reusable multi-step procedures, tool chains and runbooks go into a dedicated skill folder with a `SKILL.md`.
+3. **Checks existing configuration:** Updates existing rules or skills when possible to keep guidelines consolidated.
+4. **Requires approval:** Always presents the proposed diff, destination file and rationale before writing changes to disk.
 
 ## License
 
