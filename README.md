@@ -7,6 +7,7 @@ A skill is a folder holding a `SKILL.md` and any files it needs. The agent reads
 | Skill | What it does |
 |---|---|
 | [`experiment-report`](experiment-report) | Turns ML experiment results into one interactive, self-contained HTML report |
+| [`clip`](clip) | Copies text from the agent to your local clipboard over SSH and tmux, using OSC 52 |
 
 ## Install
 
@@ -74,6 +75,20 @@ To add a chart, reuse one of the draw helpers (`hbar`, `drawDots`, `drawLine`, `
 
 1. Add a key to `state`.
 2. Add a `.seg` button group with a matching `data-ctl`.
+
+## clip
+
+Copies text from the agent to the clipboard of the device you are typing on, even when the agent runs on a remote machine over SSH and inside tmux. It sends an OSC 52 escape sequence, which the local terminal turns into a clipboard write.
+
+| Usage | What gets copied |
+|---|---|
+| `/clip` | The main text of the last reply, such as a drafted message, a command or a code block |
+| `/clip <what>` | What you name, for example `the reply`, `the second command` or a file path |
+
+**Requirements**
+
+- A terminal that supports OSC 52, such as Termux, iTerm2, WezTerm, kitty, Windows Terminal or Alacritty.
+- Inside tmux, tmux 3.2 or newer with `set-clipboard` set to `external` (the default) or `on`. The text also stays in tmux's paste buffer, so `Ctrl-b ]` pastes it.
 
 ## License
 
