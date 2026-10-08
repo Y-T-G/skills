@@ -6,7 +6,7 @@ A skill is a folder holding a `SKILL.md` and any files it needs. The agent reads
 
 | Skill | What it does |
 |---|---|
-| [`experiment-report`](experiment-report) | Turns ML experiment results into one interactive, self-contained HTML report |
+| [`report`](report) | Turns ML experiment results into one interactive, self-contained HTML report |
 | [`clip`](clip) | Copies text from the agent to your local clipboard over SSH and tmux, using OSC 52 |
 | [`learn`](learn) | Persists corrections, preferences and workflows into rules or skills for future sessions |
 
@@ -16,7 +16,7 @@ Copy a skill folder into your personal skills directory:
 
 ```bash
 git clone https://github.com/Y-T-G/skills.git
-cp -r skills/experiment-report ~/.claude/skills/
+cp -r skills/report ~/.claude/skills/
 ```
 
 To share a skill with everyone on a project, put it in the project's `.claude/skills/` instead.
@@ -25,7 +25,7 @@ Claude Code picks the skill up on the next session. It is used when a request ma
 
 ---
 
-## experiment-report
+## report
 
 A report for experiments, benchmarks, ablations and model comparisons. It is built to be skimmed: less text, more charts, large type and generous whitespace.
 
@@ -61,7 +61,7 @@ The skill also describes an image viewer for detection work. It shows ground tru
 
 **Use the template by hand**
 
-Open `experiment-report/template.html`, edit the `DATA` object at the top of the script, and open the file in a browser. Everything else is driven by that object.
+Open `report/template.html`, edit the `DATA` object at the top of the script, and open the file in a browser. Everything else is driven by that object.
 
 ```js
 const DATA = {

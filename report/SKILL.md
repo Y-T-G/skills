@@ -1,5 +1,5 @@
 ---
-name: experiment-report
+name: report
 description: Build a concise, highly interactive, self-contained HTML report for an ML experiment or benchmark. The report has large fonts, generous whitespace, light and dark themes, and hover tooltips, and it ends with how each component improved the metric. Use when the user asks for a visual report, a results page, or a write-up of experiments, benchmarks, ablations or model comparisons.
 ---
 
