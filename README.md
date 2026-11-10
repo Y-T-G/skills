@@ -12,12 +12,13 @@ A skill is a folder holding a `SKILL.md` and any files it needs. The agent reads
 
 ## Install
 
-Copy a skill folder into your personal skills directory:
+Install all skills into your personal skills directory:
 
 ```bash
-git clone https://github.com/Y-T-G/skills.git
-cp -r skills/report ~/.claude/skills/
+d=$(mktemp -d) && git clone -q --depth 1 https://github.com/Y-T-G/skills "$d" && mkdir -p ~/.claude/skills && cp -r "$d"/{report,clip,learn} ~/.claude/skills/ && rm -rf "$d"
 ```
+
+Run it again to update. To install only some skills, edit the `{report,clip,learn}` list.
 
 To share a skill with everyone on a project, put it in the project's `.claude/skills/` instead.
 
@@ -61,7 +62,7 @@ The skill also describes an image viewer for detection work. It shows ground tru
 
 **Use the template by hand**
 
-Open `report/template.html`, edit the `DATA` object at the top of the script, and open the file in a browser. Everything else is driven by that object.
+Open `report/template.html`, edit the `DATA` object at the top of the script, and open the file in a browser. Everything else is driven by that object. Scores in `DATA` are 0 to 1 fractions. The page shows them as percent, so 0.539 reads 53.9.
 
 ```js
 const DATA = {
