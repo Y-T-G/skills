@@ -119,7 +119,7 @@ footer { margin-top: 112px; color: var(--ink3); font-size: 17px; border-top: 1px
 
 <!-- HERO: baseline to best, one metric -->
 <div class="hero">
-  <div class="big from">0.531</div><div class="arrow">→</div><div class="big to">0.743</div>
+  <div class="big from">53.1</div><div class="arrow">→</div><div class="big to">74.3</div>
   <div class="cap">{{metric}}, {{baseline}} vs {{best}}. <b>+40%</b></div>
 </div>
 
@@ -261,7 +261,7 @@ function bindTip(node, html) {
   node.addEventListener("mousemove", moveTip);
   node.addEventListener("mouseleave", hideTip);
 }
-const f3 = v => v.toFixed(3);
+const pct = v => (v * 100).toFixed(1);  // scores stay 0-1 in DATA, shown as percent
 const state = { lbMetric: 1, lbGroup: "All", rjWhy: "all", wfGroup: 0 };
 document.querySelectorAll(".seg").forEach(seg => {
   seg.addEventListener("click", e => {
@@ -283,14 +283,14 @@ function hbar(svg, rows, opt = {}) {
   const x = v => left + (v - min) / (max - min) * (W - left - right);
   for (let t = min; t <= max + 1e-9; t += opt.step || 0.2) {
     el("line", { x1: x(t), x2: x(t), y1: top, y2: H - 30, class: "gr" }, svg);
-    el("text", { x: x(t), y: H - 6, "text-anchor": "middle" }, svg, opt.tfmt ? opt.tfmt(t) : t.toFixed(opt.step < 0.1 ? 2 : 1));
+    el("text", { x: x(t), y: H - 6, "text-anchor": "middle" }, svg, opt.tfmt ? opt.tfmt(t) : +(t * 100).toFixed(1));
   }
   rows.forEach((r, i) => {
     const y = top + i * rowH, bh = rowH - 16;
     el("text", { x: left - 16, y: y + bh / 2 + 6, "text-anchor": "end", class: "lbl" }, svg, r.label);
     const w = Math.max(2, x(r.value) - x(min));
     el("path", { d: `M${x(min)},${y} h${w - 4} a4,4 0 0 1 4,4 v${bh - 8} a4,4 0 0 1 -4,4 h${-(w - 4)} z`, fill: r.color }, svg);
-    el("text", { x: x(r.value) + 10, y: y + bh / 2 + 6, class: "val" }, svg, (opt.fmt || f3)(r.value));
+    el("text", { x: x(r.value) + 10, y: y + bh / 2 + 6, class: "val" }, svg, (opt.fmt || pct)(r.value));
     if (r.right) el("text", { x: W - 4, y: y + bh / 2 + 6, "text-anchor": "end" }, svg, r.right);
     bindTip(el("rect", { x: 0, y: y - 6, width: W, height: rowH, class: "hit" }, svg), r.tip);
   });
@@ -304,7 +304,7 @@ function drawLB() {
   const rows = DATA.lb.map(([n, v, right, hl]) => {
     const val = g === "All" ? groups.reduce((t, k) => t + v[k][m], 0) / groups.length : v[g][m];
     return { label: n, value: val, right, color: hl ? "var(--s1)" : "var(--muted)",
-      tip: `<b>${n}</b><br>${f3(val)}<br>` + groups.map(k => `${k} ${f3(v[k][m])}`).join(" · ") + `<br>${right}` };
+      tip: `<b>${n}</b><br>${pct(val)}<br>` + groups.map(k => `${k} ${pct(v[k][m])}`).join(" · ") + `<br>${right}` };
   }).sort((a, b) => b.value - a.value);
   hbar($("#lb"), rows);
 }
@@ -317,7 +317,7 @@ function drawDots() {
   const W = 960, L = 260, R = 90, rowH = 76, T = 10, H = T + rows.length * rowH + 34;
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
   const x = v => L + (v - mn) / (mx - mn) * (W - L - R);
-  for (let t = mn; t <= mx + 1e-9; t += 0.02) { el("line", { x1: x(t), x2: x(t), y1: T, y2: H - 34, class: "gr" }, svg); el("text", { x: x(t), y: H - 8, "text-anchor": "middle" }, svg, t.toFixed(2)); }
+  for (let t = mn; t <= mx + 1e-9; t += 0.02) { el("line", { x1: x(t), x2: x(t), y1: T, y2: H - 34, class: "gr" }, svg); el("text", { x: x(t), y: H - 8, "text-anchor": "middle" }, svg, (t * 100).toFixed(0)); }
   rows.forEach(([n, c, v, note], i) => {
     const cy = T + i * rowH + rowH / 2, mean = v.reduce((a, b) => a + b) / v.length;
     el("text", { x: L - 16, y: cy + 6, "text-anchor": "end", class: "lbl" }, svg, n);
@@ -325,7 +325,7 @@ function drawDots() {
     el("rect", { x: x(mean) - 2, y: cy - 20, width: 4, height: 40, rx: 2, fill: "var(--ink)" }, svg);
     v.forEach(p => el("circle", { cx: x(p), cy, r: 9, fill: c, stroke: "var(--card)", "stroke-width": 2 }, svg));
     bindTip(el("rect", { x: 0, y: cy - rowH / 2, width: W, height: rowH, class: "hit" }, svg),
-      `<b>${n}</b><br>Runs: ${v.map(f3).join(", ")}<br>Mean: ${f3(mean)}<br>${note}`);
+      `<b>${n}</b><br>Runs: ${v.map(pct).join(", ")}<br>Mean: ${pct(mean)}<br>${note}`);
   });
 }
 
@@ -337,7 +337,7 @@ function drawLine() {
   const x0 = Math.min(...D.x), x1 = Math.max(...D.x), y0 = Math.min(...ys) - 0.01, y1 = Math.max(...ys) + 0.01;
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
   const x = v => L + (v - x0) / (x1 - x0) * (W - L - R), y = v => T + (y1 - v) / (y1 - y0) * (H - T - B);
-  for (let i = 0; i <= 4; i++) { const t = y0 + (y1 - y0) * i / 4; el("line", { x1: L, x2: W - R, y1: y(t), y2: y(t), class: "gr" }, svg); el("text", { x: L - 12, y: y(t) + 5, "text-anchor": "end" }, svg, t.toFixed(2)); }
+  for (let i = 0; i <= 4; i++) { const t = y0 + (y1 - y0) * i / 4; el("line", { x1: L, x2: W - R, y1: y(t), y2: y(t), class: "gr" }, svg); el("text", { x: L - 12, y: y(t) + 5, "text-anchor": "end" }, svg, (t * 100).toFixed(1)); }
   D.x.forEach(t => el("text", { x: x(t), y: H - 18, "text-anchor": "middle" }, svg, t));
   el("line", { x1: L, x2: W - R, y1: H - B, y2: H - B, class: "ax" }, svg);
   if (D.mark != null) el("line", { x1: x(D.x[D.mark]), x2: x(D.x[D.mark]), y1: T, y2: H - B, stroke: "var(--ink3)", "stroke-dasharray": "4 4" }, svg);
@@ -353,7 +353,7 @@ function drawLine() {
     const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) / r.width * W;
     let i = 0; D.x.forEach((v, j) => { if (Math.abs(x(v) - px) < Math.abs(x(D.x[i]) - px)) i = j; });
     cross.setAttribute("x1", x(D.x[i])); cross.setAttribute("x2", x(D.x[i])); cross.setAttribute("opacity", 1);
-    showTip(e, `<b>${D.x[i]}</b><br>` + D.series.map(s => `${s[0]}: ${f3(s[2][i])}`).join("<br>"));
+    showTip(e, `<b>${D.x[i]}</b><br>` + D.series.map(s => `${s[0]}: ${pct(s[2][i])}`).join("<br>"));
   });
   hit.addEventListener("mouseleave", () => { cross.setAttribute("opacity", 0); hideTip(); });
 }
@@ -363,7 +363,7 @@ function drawRJ() {
   const box = $("#rj"); box.innerHTML = "";
   DATA.rejected.filter(r => state.rjWhy === "all" || r[3] === state.rjWhy).forEach(r => {
     const d = document.createElement("div"); d.className = "rule";
-    const stats = r[1] == null ? "" : `<div class="s"><div><b>${f3(r[1])}</b><span>score</span></div><div><b>${r[2] ? "$" + r[2].toFixed(3) : "free"}</b><span>cost</span></div></div>
+    const stats = r[1] == null ? "" : `<div class="s"><div><b>${pct(r[1])}</b><span>score</span></div><div><b>${r[2] ? "$" + r[2].toFixed(3) : "free"}</b><span>cost</span></div></div>
       <div class="meter"><i style="width:${Math.min(100, Math.round(r[1] / DATA.rejectedRef * 100))}%"></i></div>`;
     d.innerHTML = `<span class="tag no">${r[4]}</span><div class="t">${r[0]}</div>${stats}<div class="d">${r[5]}</div>`;
     box.appendChild(d);
@@ -377,21 +377,21 @@ function drawWF() {
   const top = Math.ceil(Math.max(...DATA.wf.vals.flat()) * 10) / 10 + 0.05;
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
   const y = t => T + (top - t) / top * (H - T - B);
-  for (let t = 0; t <= top - 0.04; t += 0.2) { el("line", { x1: L, x2: W - R, y1: y(t), y2: y(t), class: "gr" }, svg); el("text", { x: L - 12, y: y(t) + 5, "text-anchor": "end" }, svg, t.toFixed(1)); }
+  for (let t = 0; t <= top - 0.04; t += 0.2) { el("line", { x1: L, x2: W - R, y1: y(t), y2: y(t), class: "gr" }, svg); el("text", { x: L - 12, y: y(t) + 5, "text-anchor": "end" }, svg, (t * 100).toFixed(0)); }
   const n = v.length + 1, slot = (W - L - R) / n, bw = slot * 0.56;
   const bars = v.map((val, i) => ({ lo: i ? v[i - 1] : 0, hi: val, name: DATA.wf.steps[i], c: i ? "var(--s1)" : "var(--muted)" }));
   bars.push({ lo: 0, hi: v[v.length - 1], name: "Final", c: "var(--ink)" });
   bars.forEach((b, i) => {
     const cx = L + slot * i + slot / 2, tp = y(b.hi), h = Math.max(3, y(b.lo) - y(b.hi)), gain = i > 0 && i < bars.length - 1;
     el("rect", { x: cx - bw / 2, y: tp, width: bw, height: h, rx: 4, fill: b.c }, svg);
-    el("text", { x: cx, y: tp - 12, "text-anchor": "middle", class: "val", "font-weight": 600 }, svg, gain ? "+" + f3(b.hi - b.lo) : f3(b.hi));
+    el("text", { x: cx, y: tp - 12, "text-anchor": "middle", class: "val", "font-weight": 600 }, svg, gain ? "+" + pct(b.hi - b.lo) : pct(b.hi));
     el("text", { x: cx, y: H - 24, "text-anchor": "middle", class: "lbl" }, svg, b.name);
     if (i < bars.length - 1) el("line", { x1: cx + bw / 2, x2: cx + slot - bw / 2, y1: tp, y2: tp, stroke: "var(--ink3)", "stroke-dasharray": "3 3" }, svg);
     bindTip(el("rect", { x: cx - slot / 2, y: T - 30, width: slot, height: H - T - B + 30, class: "hit" }, svg),
-      `<b>${b.name}</b><br>${f3(b.hi)}${gain ? `<br>Gain: +${f3(b.hi - b.lo)}` : ""}`);
+      `<b>${b.name}</b><br>${pct(b.hi)}${gain ? `<br>Gain: +${pct(b.hi - b.lo)}` : ""}`);
   });
   const all = DATA.wf.vals[0];
-  $("#gains").innerHTML = DATA.gains.map((l, i) => `<div class="tile"><div class="v" style="color:var(--s1)">+${f3(all[i + 1] - all[i])}</div><div class="l">${l}</div></div>`).join("");
+  $("#gains").innerHTML = DATA.gains.map((l, i) => `<div class="tile"><div class="v" style="color:var(--s1)">+${pct(all[i + 1] - all[i])}</div><div class="l">${l}</div></div>`).join("");
 }
 
 function drawAll() { drawLB(); drawDots(); drawLine(); drawRJ(); drawWF(); }

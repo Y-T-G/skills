@@ -52,7 +52,7 @@ Files in this folder:
   - line charts get a crosshair;
   - toggles are pill segments (`.seg`), placed in one row above the chart;
   - use toggles for group, metric, stage (raw vs refined) and rejected-reason filters.
-- **Numbers:** show 3 decimals for mAP-like scores. Gain tiles must equal the waterfall steps, so compute both from the same rounded values.
+- **Numbers:** always show mAP and other 0-1 scores as percent with one decimal: 53.9, never 0.539. Keep fractions in `DATA` and format with `pct`; axis ticks and gains (in points) use the same scale. Gain tiles must equal the waterfall steps, so compute both from the same rounded values.
 - **Honesty:** the footer lists caveats: sample size, settings tuned on the test set, and what was not tested. Show run-to-run noise when you have repeats.
 - **Images, if the experiment has them:**
   - embed JPEGs at 1200 px and quality 72 as base64, and keep the file under 16 MB;
