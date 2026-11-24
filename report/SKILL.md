@@ -26,10 +26,12 @@ Files in this folder:
    10. **final section:** pipeline diagram, waterfall of each component's gain, and gain tiles.
 
    Always end with the waterfall.
-3. **Copy `template.html`,** fill `DATA`, and delete the sections you don't need. To add a chart, reuse `hbar`, `drawDots`, `drawLine` or `drawWF`. Add each new toggle to `state`, add its `.seg` with `data-ctl`, and call its draw function from `drawAll()`.
+3. **Copy `template.html`,** fill `DATA`, including `DATA.nouns` with every model, method and dataset name the page mentions, and delete the sections you don't need. To add a chart, reuse `hbar`, `drawDots`, `drawLine` or `drawWF`. Add each new toggle to `state`, add its `.seg` with `data-ctl`, and call its draw function from `drawAll()`. A `data-v` that looks like a number is stored as a number, so give its `state` default as a number and compare with numbers.
 4. **Check it:**
    - `node --check` on the script;
-   - render in jsdom (`npm i jsdom` in a temp dir), confirm every SVG has children, and click each `.seg` button with no errors;
+   - render in jsdom (`npm i jsdom` in a temp dir), confirm every SVG has children, and click each `.seg` button with no errors, then click back to the default and confirm the chart returns to its first state;
+   - print every computed lead and note, and read them against the data;
+   - confirm the names in `DATA.nouns` come out as `.nm` spans, and that no plain word such as "Third" got marked by mistake;
    - take a screenshot with Playwright if it can launch.
 5. **Report back** the path and the sections. Offer to publish it as a private Artifact only if the user wants a link.
 
@@ -42,17 +44,19 @@ Files in this folder:
 - **Wording:**
   - each section has a kicker ("Step 1"), a question as the h2, and a one-line takeaway lead;
   - at most one short note under a chart;
+  - a lead or note that cites numbers is computed in JS from `DATA`, never typed in, so it stays right when the data changes;
   - no paragraphs.
 - **Color:**
   - use tokens only: `--s1` blue for the winner or the focus, `--s2` orange, `--s3` green, `--muted` grey for the rest, `--bad` red for failures;
   - text stays in the ink tokens, never in the series color;
+  - **proper nouns** (model, method and dataset names) are marked with `.nm`, which gives semi-bold ink text with an unfilled half-chip outline under it, a short rounded U line under the lower third of the word whose sides fade out toward the top, in the group's color. The groups are ours `--s1`, third party `--s2`, public or reference `--ink3`, datasets `--s3`, matching the chart colors. `tagNouns` marks them in all HTML text, including computed leads and tooltips, and skips SVG, buttons, links, kickers and tile numbers. List names in `DATA.nouns`, never ordinary words;
   - light and dark sets are defined under `prefers-color-scheme`, plus `[data-theme]` for the toggle button.
 - **Interaction:**
   - every chart has hover tooltips (`bindTip`);
   - line charts get a crosshair;
   - toggles are pill segments (`.seg`), placed in one row above the chart;
   - use toggles for group, metric, stage (raw vs refined) and rejected-reason filters.
-- **Numbers:** always show mAP and other 0-1 scores as percent with one decimal: 53.9, never 0.539. Keep fractions in `DATA` and format with `pct`; axis ticks and gains (in points) use the same scale. Gain tiles must equal the waterfall steps, so compute both from the same rounded values.
+- **Numbers:** always show mAP and other 0-1 scores as percent with one decimal: 53.9, never 0.539. Keep fractions in `DATA` and format with `pct`; axis ticks and gains (in points) use the same scale. Gain tiles must equal the waterfall steps, so compute both from the same rounded values. `pct` rounds halves away from zero and never prints -0.0. Put `|` in a long waterfall step name to break its label onto two lines.
 - **Honesty:** the footer lists caveats: sample size, settings tuned on the test set, and what was not tested. Show run-to-run noise when you have repeats.
 - **Images, if the experiment has them:**
   - embed JPEGs at 1200 px and quality 72 as base64, and keep the file under 16 MB;

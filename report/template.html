@@ -67,6 +67,12 @@ svg .gr { stroke: var(--grid); }
 #tip b { font-size: 17px; }
 .legend { display: flex; gap: 24px; flex-wrap: wrap; margin: 0 0 16px; color: var(--ink2); font-size: 17px; }
 .legend span::before { content: ""; display: inline-block; width: 14px; height: 14px; border-radius: 4px; margin-right: 8px; vertical-align: -1px; background: var(--c); }
+.nm { font-weight: 600; color: var(--ink); white-space: nowrap; position: relative; padding: 0 .22em; }
+.nm::after { content: ""; position: absolute; left: 0; right: 0; bottom: -.06em; height: .36em; pointer-events: none;
+  border: 2px solid color-mix(in srgb, var(--c) 75%, transparent); border-top: 0; border-radius: 0 0 .4em .4em;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 80%); mask-image: linear-gradient(to bottom, transparent, #000 80%); }
+.nm.ours { --c: var(--s1); } .nm.third { --c: var(--s2); } .nm.public { --c: var(--ink3); } .nm.data { --c: var(--s3); }
+h1 .nm, h2 .nm { font-weight: inherit; }
 .pipe { display: flex; align-items: stretch; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
 .step { flex: 1 1 150px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; }
 .step b { display: block; font-size: 20px; margin-bottom: 6px; }
@@ -82,8 +88,6 @@ svg .gr { stroke: var(--grid); }
 .rule .s { display: flex; gap: 28px; margin: 6px 0 14px; font-variant-numeric: tabular-nums; }
 .rule .s b { display: block; font-size: 30px; font-weight: 700; line-height: 1.1; }
 .rule .s span { font-size: 15px; color: var(--ink3); }
-.meter { height: 8px; border-radius: 4px; background: var(--line); margin-bottom: 14px; overflow: hidden; }
-.meter i { display: block; height: 100%; border-radius: 4px; background: var(--muted); }
 .tile.hl { border-color: var(--s1); }
 .viz { position: relative; border-radius: 14px; overflow: hidden; background: var(--line); }
 .viz img { display: block; width: 100%; height: auto; }
@@ -115,19 +119,19 @@ footer { margin-top: 112px; color: var(--ink3); font-size: 17px; border-top: 1px
 
 <div class="kicker">Experiment report</div>
 <h1>{{Title: what the experiment achieved}}</h1>
-<p class="lead">{{One or two sentences: the problem and what was tried.}}</p>
+<p class="lead">{{One or two sentences: the problem and what was tried, such as Our model against Baseline-X on Dataset-A.}}</p>
 
 <!-- HERO: baseline to best, one metric -->
 <div class="hero">
-  <div class="big from">53.1</div><div class="arrow">→</div><div class="big to">74.3</div>
-  <div class="cap">{{metric}}, {{baseline}} vs {{best}}. <b>+40%</b></div>
+  <div class="big from">50.0</div><div class="arrow">→</div><div class="big to">70.0</div>
+  <div class="cap">{{metric}}, {{baseline}} vs {{best}}. <b>+{{gain}}</b></div>
 </div>
 
 <!-- STAT TILES: 3 to 4 numbers, short labels -->
 <div class="tiles">
-  <div class="tile"><div class="v">18</div><div class="l">test items</div></div>
-  <div class="tile"><div class="v">11</div><div class="l">variants compared</div></div>
-  <div class="tile"><div class="v">$2.6</div><div class="l">total spend</div></div>
+  <div class="tile"><div class="v">{{value}}</div><div class="l">{{short label}}</div></div>
+  <div class="tile"><div class="v">{{value}}</div><div class="l">{{short label}}</div></div>
+  <div class="tile"><div class="v">{{value}}</div><div class="l">{{short label}}</div></div>
 </div>
 
 <!-- SECTION: ranked bars with toggles -->
@@ -151,8 +155,8 @@ footer { margin-top: 112px; color: var(--ink3); font-size: 17px; border-top: 1px
   <h2>{{What is wrong?}}</h2>
   <p class="lead">{{Diagnosis in one line.}}</p>
   <div class="tiles">
-    <div class="tile"><div class="v">+5-14%</div><div class="l">{{finding}}</div></div>
-    <div class="tile"><div class="v">46%</div><div class="l">{{finding}}</div></div>
+    <div class="tile"><div class="v">{{value}}</div><div class="l">{{finding}}</div></div>
+    <div class="tile"><div class="v">{{value}}</div><div class="l">{{finding}}</div></div>
   </div>
 </section>
 
@@ -180,7 +184,7 @@ footer { margin-top: 112px; color: var(--ink3); font-size: 17px; border-top: 1px
   <div class="kicker">Rejected</div>
   <h2>Tested and rejected</h2>
   <div class="controls">
-    <div class="seg" data-ctl="rjWhy"><button aria-pressed="true" data-v="all">All</button><button aria-pressed="false" data-v="acc">Less accurate</button><button aria-pressed="false" data-v="cost">Too expensive</button></div>
+    <div class="seg" data-ctl="rjWhy"><button aria-pressed="true" data-v="all">All</button><button aria-pressed="false" data-v="worse">Worse</button><button aria-pressed="false" data-v="same">No gain</button></div>
   </div>
   <div class="rules" id="rj"></div>
 </section>
@@ -209,33 +213,34 @@ footer { margin-top: 112px; color: var(--ink3); font-size: 17px; border-top: 1px
 <script>
 // ============ DATA: replace everything in this block ============
 const DATA = {
+  // proper nouns to mark in text, by group: ours (blue), third party (orange), public or reference (grey), datasets (green). Longest match wins.
+  nouns: { ours: ["Our model"], third: ["Baseline-X"], public: [], data: ["Dataset-A"] },
   // name, per-metric value per group {All, G1, G2} as [metricA, metricB], right-column note, highlight
   lb: [
-    ["Winner", { G1: [0.83, 0.57], G2: [0.78, 0.43] }, "$0.084", true],
-    ["Runner-up", { G1: [0.86, 0.58], G2: [0.56, 0.33] }, "$0.097"],
-    ["Third", { G1: [0.82, 0.58], G2: [0.65, 0.41] }, "$0.093"],
+    ["Winner", { G1: [0.80, 0.60], G2: [0.75, 0.50] }, "1.0×", true],
+    ["Runner-up", { G1: [0.78, 0.58], G2: [0.65, 0.45] }, "1.5×"],
+    ["Third", { G1: [0.76, 0.55], G2: [0.60, 0.40] }, "2.0×"],
   ],
   // variant, color token, runs, note
   dots: [
-    ["Variant A", "var(--s1)", [0.685, 0.658, 0.699, 0.666], "4 runs"],
-    ["Variant B", "var(--s2)", [0.718, 0.653], "2 runs"],
-    ["Variant C", "var(--s3)", [0.637, 0.653], "2 runs"],
+    ["Variant A", "var(--s1)", [0.70, 0.71, 0.72, 0.71], "4 runs"],
+    ["Variant B", "var(--s2)", [0.68, 0.69], "2 runs"],
+    ["Variant C", "var(--s3)", [0.65, 0.66], "2 runs"],
   ],
   // x values, series [name, color, y values], index of the marked default
-  line: { x: [896, 1008, 1036, 1120, 1344, 2016], mark: 2,
-    series: [["Merged", "var(--s1)", [0.685, 0.693, 0.733, 0.693, 0.678, 0.667]],
-             ["Run A", "var(--s2)", [0.648, 0.656, 0.699, 0.659, 0.646, 0.636]]] },
-  // name, score (or null), cost (or null), filter key, verdict tag, one line why
+  line: { x: [1, 2, 4, 8, 16, 32], mark: 2,
+    series: [["Variant A", "var(--s1)", [0.60, 0.65, 0.70, 0.69, 0.68, 0.67]],
+             ["Variant B", "var(--s2)", [0.55, 0.60, 0.64, 0.63, 0.62, 0.61]]] },
+  // name, score (or null), reference score it is compared with (or null), filter key, verdict tag, one line why
   rejected: [
-    ["Option X", 0.499, 0.097, "acc", "Close runner-up", "Loses on G2."],
-    ["Option Y", 0.423, 0.731, "cost", "9× the cost", "Most expensive, less accurate."],
-    ["Option Z", null, null, "cost", "Not run", "Too expensive to try."],
+    ["Option X", 0.50, 0.60, "worse", "Worse", "{{One line why.}}"],
+    ["Option Y", 0.60, 0.60, "same", "No gain", "{{One line why.}}"],
+    ["Option Z", null, null, "worse", "Failed", "{{One line why.}}"],
   ],
-  rejectedRef: 0.531,  // bar length is relative to this score
-  // waterfall: step names, then cumulative values per group [All, G1, G2]
+  // waterfall: step names, then cumulative values per group [All, G1, G2]; "|" in a name breaks the label
   wf: { steps: ["Baseline", "+ Step A", "+ Step B", "+ Step C"],
-        vals: [[0.531, 0.659, 0.685, 0.733], [0.572, 0.687, 0.730, 0.774], [0.434, 0.606, 0.622, 0.641]] },
-  gains: ["Step A. Biggest win.", "Step B.", "Step C. 2× cost."],  // one label per gain step
+        vals: [[0.50, 0.60, 0.65, 0.70], [0.55, 0.65, 0.70, 0.75], [0.45, 0.55, 0.60, 0.65]] },
+  gains: ["{{Step A}}", "{{Step B}}", "{{Step C}}"],  // one label per gain step
 };
 // ================================================================
 
@@ -249,7 +254,20 @@ function el(tag, attrs, parent, text) {
   if (parent) parent.appendChild(e);
   return e;
 }
-function showTip(ev, html) { tip.innerHTML = html; tip.style.opacity = 1; moveTip(ev); }
+// Model and dataset names get a marker underline in their chart color, so nouns stand out from plain text
+const NOUNS = Object.entries(DATA.nouns || {}).flatMap(([c, ws]) => ws.map(w => [w, c])).sort((a, b) => b[0].length - a[0].length);
+const NCLS = Object.fromEntries(NOUNS), NRE = NOUNS.length && new RegExp(`(?<![\\w.-])(${NOUNS.map(([w]) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})(?![\\w-]|\\.\\d)`, "g");
+function tagNouns(root) {
+  if (!NRE) return;
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentElement.closest("svg, script, style, button, a, .nm, .legend, .tile .v, .kicker, title") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
+  const nodes = []; while (w.nextNode()) if ((NRE.lastIndex = 0, NRE.test(w.currentNode.data))) nodes.push(w.currentNode);
+  for (const n of nodes) {
+    const f = document.createDocumentFragment(); let i = 0;
+    for (const m of n.data.matchAll(NRE)) { f.append(n.data.slice(i, m.index), Object.assign(document.createElement("span"), { className: "nm " + NCLS[m[1]], textContent: m[1] })); i = m.index + m[1].length; }
+    f.append(n.data.slice(i)); n.replaceWith(f);
+  }
+}
+function showTip(ev, html) { tip.innerHTML = html; tagNouns(tip); tip.style.opacity = 1; moveTip(ev); }
 function moveTip(ev) {
   const x = Math.min(ev.clientX + 16, innerWidth - tip.offsetWidth - 12);
   const y = Math.min(ev.clientY + 16, innerHeight - tip.offsetHeight - 12);
@@ -261,7 +279,7 @@ function bindTip(node, html) {
   node.addEventListener("mousemove", moveTip);
   node.addEventListener("mouseleave", hideTip);
 }
-const pct = v => (v * 100).toFixed(1);  // scores stay 0-1 in DATA, shown as percent
+const pct = v => { const r = Math.round(v * 1000 + Math.sign(v) * 1e-6) / 10; return (r || 0).toFixed(1); };  // scores stay 0-1 in DATA, shown as percent; halves round away from zero, never "-0.0"
 const state = { lbMetric: 1, lbGroup: "All", rjWhy: "all", wfGroup: 0 };
 document.querySelectorAll(".seg").forEach(seg => {
   seg.addEventListener("click", e => {
@@ -358,13 +376,13 @@ function drawLine() {
   hit.addEventListener("mouseleave", () => { cross.setAttribute("opacity", 0); hideTip(); });
 }
 
-// Rejected cards with verdict tag, score, cost and a meter against the winner
+// Rejected cards with verdict tag, score, and change against its reference
 function drawRJ() {
   const box = $("#rj"); box.innerHTML = "";
   DATA.rejected.filter(r => state.rjWhy === "all" || r[3] === state.rjWhy).forEach(r => {
     const d = document.createElement("div"); d.className = "rule";
-    const stats = r[1] == null ? "" : `<div class="s"><div><b>${pct(r[1])}</b><span>score</span></div><div><b>${r[2] ? "$" + r[2].toFixed(3) : "free"}</b><span>cost</span></div></div>
-      <div class="meter"><i style="width:${Math.min(100, Math.round(r[1] / DATA.rejectedRef * 100))}%"></i></div>`;
+    const dl = r[1] == null || r[2] == null ? null : r[1] - r[2];
+    const stats = r[1] == null ? "" : `<div class="s"><div><b>${pct(r[1])}</b><span>score</span></div>${dl == null ? "" : `<div><b>${dl >= 0 ? "+" : ""}${pct(dl)}</b><span>vs ${pct(r[2])}</span></div>`}</div>`;
     d.innerHTML = `<span class="tag no">${r[4]}</span><div class="t">${r[0]}</div>${stats}<div class="d">${r[5]}</div>`;
     box.appendChild(d);
   });
@@ -385,16 +403,16 @@ function drawWF() {
     const cx = L + slot * i + slot / 2, tp = y(b.hi), h = Math.max(3, y(b.lo) - y(b.hi)), gain = i > 0 && i < bars.length - 1;
     el("rect", { x: cx - bw / 2, y: tp, width: bw, height: h, rx: 4, fill: b.c }, svg);
     el("text", { x: cx, y: tp - 12, "text-anchor": "middle", class: "val", "font-weight": 600 }, svg, gain ? "+" + pct(b.hi - b.lo) : pct(b.hi));
-    el("text", { x: cx, y: H - 24, "text-anchor": "middle", class: "lbl" }, svg, b.name);
+    b.name.split("|").forEach((t, j, a) => el("text", { x: cx, y: H - 24 + (j - (a.length - 1) / 2) * 17, "text-anchor": "middle", class: "lbl" }, svg, t));  // "|" in a step name breaks the label
     if (i < bars.length - 1) el("line", { x1: cx + bw / 2, x2: cx + slot - bw / 2, y1: tp, y2: tp, stroke: "var(--ink3)", "stroke-dasharray": "3 3" }, svg);
     bindTip(el("rect", { x: cx - slot / 2, y: T - 30, width: slot, height: H - T - B + 30, class: "hit" }, svg),
-      `<b>${b.name}</b><br>${pct(b.hi)}${gain ? `<br>Gain: +${pct(b.hi - b.lo)}` : ""}`);
+      `<b>${b.name.replace("|", " ")}</b><br>${pct(b.hi)}${gain ? `<br>Gain: +${pct(b.hi - b.lo)}` : ""}`);
   });
   const all = DATA.wf.vals[0];
   $("#gains").innerHTML = DATA.gains.map((l, i) => `<div class="tile"><div class="v" style="color:var(--s1)">+${pct(all[i + 1] - all[i])}</div><div class="l">${l}</div></div>`).join("");
 }
 
-function drawAll() { drawLB(); drawDots(); drawLine(); drawRJ(); drawWF(); }
+function drawAll() { drawLB(); drawDots(); drawLine(); drawRJ(); drawWF(); tagNouns(document.body); }
 drawAll();
 
 $("#theme").addEventListener("click", () => {
